@@ -19,10 +19,13 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 		reply += "*INFO*\n"
 		reply += ".halo\n"
 		reply += ".cuaca\n"
+		reply += ".quotes\n"
 	case ".halo":
 		reply += fmt.Sprintf("Halo juga, %s", v.Info.PushName)
 	case ".cuaca":
 		reply += "Udahlah pasti panas malah pake nanya"
+	case ".quotes":
+		reply += "Gak perlu quotes, sana cuci piringnya"
 	default:
 		reply = ""
 	}
