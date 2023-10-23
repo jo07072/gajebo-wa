@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/url"
 	"strings"
 
 	"github.com/go-zoox/fetch"
@@ -56,10 +55,10 @@ func GetInfo() string {
 _.help .menu .info_
 Bantuan untuk menggunakan bot ini
 	
-_.cuaca lokasi_
-Lihat cuaca di lokasi tertentu
+_.cuaca kota_
+Lihat cuaca di kota tertentu
 
-_quotes_
+_.quotes_
 Quotes random tiktok viral 2023
 
 *- HENGKER -*
@@ -67,15 +66,40 @@ _.ip www.site.com_`
 }
 
 func GetWeather(location string) string {
-	format := url.QueryEscape("%l\n\n%C: %t%c\nAngin: %w\nBulan: %m\nTekanan: %P\nIndex UV: %u")
-	response, err := fetch.Get(fmt.Sprintf("https://wttr.in/%s?lang=id&format=%s", location, format))
+	//format := url.QueryEscape("%l\n\n%C: %t%c\nAngin: %w\nBulan: %m\nTekanan: %P\nIndex UV: %u")
+	//response, err := fetch.Get(fmt.Sprintf("https://wttr.in/%s?lang=id&format=%s", location, format))
 
-	if err != nil {
+	// https://api.openweathermap.org/data/2.5/forecast?q=Bandar%20Lampung&lang=id&units=metric&appid=20bd143d0d2383af677e195a47b89556
+	response, err := fetch.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/forecast?q=%s&lang=id&units=metric&appid=20bd143d0d2383af677e195a47b89556", location))
+	json := string(response.Body)
+
+	if err != nil || response.Status != 200 || !gjson.Valid(json) {
 		Error("Cant get weather : %s", response.Error().Error())
 		return "Gak bisa liat cuaca, coba lagi nanti"
 	}
 
-	return string(response.Body) + "\n\n_~ wttr.in_"
+	lat := gjson.Get(json, "city.coord.lat").String()
+	lon := gjson.Get(json, "city.coord.lon").String()
+
+	s := location + "\n\n"
+	limit := 5
+
+	for i, v := range gjson.Get(json, "list").Array() {
+		s += fmt.Sprintf("%s\n", v.Get("dt_txt").String())
+		s += fmt.Sprintf("Suhu: %s°C\n", v.Get("main.temp").String())
+		s += fmt.Sprintf("Cuaca: %s\n", v.Get("weather.0.description").String())
+		s += "\n"
+
+		if (i + 1) >= limit {
+			break
+		}
+	}
+
+	// give credit
+	s += "_~ OpenWeatherMap_\n"
+	s += fmt.Sprintf("http://www.google.com/maps/place/%s,%s", lat, lon)
+
+	return s
 }
 
 func GetQuotes() string {
