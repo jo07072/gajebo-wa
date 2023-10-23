@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/binary/proto"
@@ -29,6 +30,8 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 	default:
 		reply = ""
 	}
+
+	reply = strings.TrimSpace(reply)
 
 	if reply != "" {
 		client.SendMessage(context.Background(), v.Info.Chat, &proto.Message{Conversation: &reply})

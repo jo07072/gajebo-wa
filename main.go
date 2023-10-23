@@ -20,6 +20,14 @@ var (
 	client *whatsmeow.Client
 )
 
+func FakeHttp() {
+	http.ListenAndServe(":80",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("OK"))
+		},
+		))
+}
+
 func eventHandler(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
@@ -28,8 +36,6 @@ func eventHandler(evt interface{}) {
 }
 
 func main() {
-	http.ListenAndServe(":80", nil)
-
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	// Make sure you add appropriate DB connector imports, e.g. github.com/mattn/go-sqlite3 for SQLite
 	container, err := sqlstore.New("sqlite3", "file:examplestore.db?_foreign_keys=on", dbLog)
@@ -68,6 +74,9 @@ func main() {
 			panic(err)
 		}
 	}
+
+	Info("Starting HTTP server")
+	FakeHttp()
 
 	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
 	c := make(chan os.Signal)
