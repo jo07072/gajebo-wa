@@ -1,0 +1,8 @@
+{
+  "name": "gajebo-wa",
+  "version": "1.0.0",
+  "description": "Some WA bot after hundred years abandoned",
+  "scripts": {
+    "start": "go run main.go"
+  }
+}
