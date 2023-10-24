@@ -77,6 +77,8 @@ func main() {
 
 	Info("Starting HTTP server")
 	FakeHttp()
+	Info("Starting Cron Schedule")
+	StartCron()
 
 	// Listen to Ctrl+C (you can also do something else that prevents the program from exiting)
 	c := make(chan os.Signal)

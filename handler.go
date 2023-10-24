@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 
 	"github.com/go-zoox/fetch"
@@ -36,6 +37,18 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 		reply += GetWeather(strings.Join(query, " "))
 	case ".quotes":
 		reply += GetQuotes()
+	case ".matauang":
+		if len(query) == 0 {
+			reply += "Input tidak valid"
+		} else if query[0] == "list" {
+			reply += currenciesList
+		} else if len(query) == 1 {
+			reply += "Input tidak valid"
+		} else if len(query) == 2 {
+			reply += GetCurrency(query[0], query[1], "IDR")
+		} else {
+			reply += GetCurrency(query[0], query[1], query[2])
+		}
 	case ".ip":
 		reply += IpLookup(query[0])
 	default:
@@ -60,6 +73,12 @@ Lihat cuaca di kota tertentu
 
 _.quotes_
 Quotes random tiktok viral 2023
+
+_.matauang jumlah dari ke_
+Konversi Mata Uang
+
+_.matauang list_
+Lihat list mata uang
 
 *- HENGKER -*
 _.ip www.site.com_`
@@ -102,6 +121,35 @@ func GetWeather(location string) string {
 	return s
 }
 
+func GetCurrency(amount string, from string, to string) string {
+	// https://www.frankfurter.app/latest?amount=1&from=GBP&to=USD
+	// 	{
+	// "amount": 1,
+	// "base": "GBP",
+	// "date": "2023-10-24",
+	// "rates": {
+	// "USD": 1.2217
+	// }
+	// }
+
+	s := ""
+	from = strings.ToUpper(from)
+	to = strings.ToUpper(to)
+	amountInt, amountError := strconv.Atoi(amount)
+	response, err := fetch.Get(fmt.Sprintf("https://www.frankfurter.app/latest?amount=%d&from=%s&to=%s", amountInt, from, to))
+	json := string(response.Body)
+
+	if err != nil || response.Status != 200 || !gjson.Valid(json) || amountError != nil {
+		Error("Cant get currencies : %s", response.Error().Error())
+		return "Salah input bang, coba lagi"
+	}
+
+	toValue := gjson.Get(json, "rates."+to).Float()
+	s += fmt.Sprintf("%d %s = %.2f %s", amountInt, from, toValue, to)
+
+	return s
+}
+
 func GetQuotes() string {
 	// 	{
 	// "_id": "VZAbqrJVc59C",
@@ -127,7 +175,7 @@ func GetQuotes() string {
 	quote := gjson.Get(json, "content").String()
 	author := gjson.Get(json, "author").String()
 
-	s := fmt.Sprintf("```%s```\n\n_~ %s_", quote, author)
+	s := fmt.Sprintf("```\"%s\"```\n\n_~ %s_", quote, author)
 
 	return s
 }
