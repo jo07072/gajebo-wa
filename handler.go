@@ -18,7 +18,8 @@ import (
 func OnMessage(client *whatsmeow.Client, v *events.Message) {
 	Info("Received a message from %s : %s", v.Info.Chat, v.Message.GetConversation())
 	reply := ""
-	words := strings.Split(v.Message.GetConversation(), " ")
+	z := strings.Replace(v.Message.GetConversation(), "\n", " \n", 1)
+	words := strings.Split(z, " ")
 	//command := regexp.MustCompile(`\.[a-zA-Z]+`).Split(text)
 	command := words[0]
 	query := words[1:]
@@ -60,6 +61,10 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 		reply += IpLookup(query[0])
 	case ".cpp":
 		reply += GetCppResponses(strings.Join(query, " "))
+	case ".js":
+		reply += GetJsResponses(strings.Join(query, " "))
+	case ".kotlin":
+		reply += GetKotlinResponses(strings.Join(query, " "))
 	default:
 		reply = ""
 	}
@@ -94,8 +99,9 @@ Lihat berita terbaru dari CNN
 
 *- HENGKER -*
 _.ip www.site.com_
-
-_.cpp kode..._`
+_.cpp kode..._
+_.js kode..._
+_.kotlin kode..._`
 }
 
 func GetWeather(location string) string {
@@ -186,54 +192,6 @@ func GetNews() string {
 	}
 
 	s += "_~ CNN Indonesia_"
-	return s
-}
-
-func GetCppResponses(code string) string {
-	// https://api-berita-indonesia.vercel.app/cnn/terbaru/
-	response, err := fetch.Post(fmt.Sprintf("https://onecompiler.com/api/code/exec"), &fetch.Config{
-		Body: map[string]interface{}{
-			"name":         "C++",
-			"title":        "C++ Hello World",
-			"version":      "latest",
-			"mode":         "c_cpp",
-			"description":  "",
-			"extension":    "cpp",
-			"languageType": "programming",
-			"active":       true,
-			"visibility":   "public",
-			"properties": map[string]interface{}{
-				"language":    "cpp",
-				"docs":        true,
-				"tutorials":   true,
-				"cheatsheets": true,
-				"files": []map[string]interface{}{
-					{
-						"name":    "Main.cpp",
-						"content": code,
-					},
-				},
-			},
-		},
-	})
-
-	json := string(response.Body)
-
-	if err != nil || !gjson.Valid(json) {
-		Error("Cant get cpp response : %s", response.Error().Error())
-		return "Gak bisa jalanin kodemu, fixkan dulu"
-	}
-
-	s := ""
-	stdout := gjson.Get(json, "stdout").String()
-	stderr := gjson.Get(json, "stderr").String()
-
-	if stdout == "" {
-		s += fmt.Sprintf("```%s```", stdout)
-	} else {
-		s += fmt.Sprintf("```Aaa tidak!\n%s```", stderr)
-	}
-
 	return s
 }
 
