@@ -24,7 +24,7 @@ var classesIn30Min = map[string]string{
 func StartCron() {
 	//loc := time.FixedZone("UTC+7", 7*60*60)
 	c := cron.New()
-	c.AddFunc("* * * * *", CheckTask)
+	c.AddFunc("0 * * * * *", CheckTask)
 	c.Start()
 	Info("Cron started")
 }

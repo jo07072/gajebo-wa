@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
 	"strconv"
 	"strings"
@@ -49,8 +50,12 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 		} else {
 			reply += GetCurrency(query[0], query[1], query[2])
 		}
+	case ".berita":
+		reply += GetNews()
 	case ".ip":
 		reply += IpLookup(query[0])
+	case ".cpp":
+		reply += GetCppResponses(strings.Join(query, " "))
 	default:
 		reply = ""
 	}
@@ -80,8 +85,13 @@ Konversi Mata Uang
 _.matauang list_
 Lihat list mata uang
 
+_.berita_
+Lihat berita terbaru dari CNN
+
 *- HENGKER -*
-_.ip www.site.com_`
+_.ip www.site.com_
+
+_.cpp kode..._`
 }
 
 func GetWeather(location string) string {
@@ -147,6 +157,72 @@ func GetCurrency(amount string, from string, to string) string {
 	toValue := gjson.Get(json, "rates."+to).Float()
 	s += fmt.Sprintf("%d %s = %.2f %s", amountInt, from, toValue, to)
 
+	return s
+}
+
+func GetNews() string {
+	// https://api-berita-indonesia.vercel.app/cnn/terbaru/
+	response, err := fetch.Get(fmt.Sprintf("https://api-berita-indonesia.vercel.app/cnn/terbaru/"))
+	json := string(response.Body)
+
+	if err != nil || !gjson.Valid(json) {
+		Error("Cant get news : %s", response.Error().Error())
+		return "Gak bisa dapetin berita terbaru, coba lagi nanti"
+	}
+
+	s := ""
+	news := gjson.Get(json, "data.posts").Array()
+	length := len(news)
+
+	for i := 0; i < 5; i++ {
+		n := news[rand.Intn(length)]
+		s += fmt.Sprintf("*%s*\n", n.Get("title").String())
+		s += fmt.Sprintf("_%s_\n", n.Get("description").String())
+		s += fmt.Sprintf("%s\n\n", n.Get("link").String())
+	}
+
+	s += "_~ CNN Indonesia_"
+	return s
+}
+
+func GetCppResponses(code string) string {
+	// https://api-berita-indonesia.vercel.app/cnn/terbaru/
+	response, err := fetch.Post(fmt.Sprintf("https://onecompiler.com/api/code/exec"), &fetch.Config{
+		Body: map[string]interface{}{
+			"name":         "C++",
+			"title":        "C++ Hello World",
+			"version":      "latest",
+			"mode":         "c_cpp",
+			"description":  "",
+			"extension":    "cpp",
+			"languageType": "programming",
+			"active":       true,
+			"visibility":   "public",
+			"properties": map[string]interface{}{
+				"language":    "cpp",
+				"docs":        true,
+				"tutorials":   true,
+				"cheatsheets": true,
+				"files": []map[string]interface{}{
+					{
+						"name":    "Main.cpp",
+						"content": code,
+					},
+				},
+			},
+		},
+	})
+
+	json := string(response.Body)
+
+	if err != nil || !gjson.Valid(json) {
+		Error("Cant get cpp response : %s", response.Error().Error())
+		return "Gak bisa jalanin kodemu, fixkan dulu"
+	}
+
+	s := ""
+	stdout := gjson.Get(json, "stdout").String()
+	s += fmt.Sprintf("```%s```", stdout)
 	return s
 }
 
