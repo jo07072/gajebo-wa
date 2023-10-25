@@ -34,6 +34,10 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 		reply += GetInfo()
 	case ".help":
 		reply += GetInfo()
+	case ".helo":
+		reply += GetInfo()
+	case ".halo":
+		reply += GetInfo()
 	case ".cuaca":
 		reply += GetWeather(strings.Join(query, " "))
 	case ".quotes":
@@ -222,7 +226,14 @@ func GetCppResponses(code string) string {
 
 	s := ""
 	stdout := gjson.Get(json, "stdout").String()
-	s += fmt.Sprintf("```%s```", stdout)
+	stderr := gjson.Get(json, "stderr").String()
+
+	if stdout == "" {
+		s += fmt.Sprintf("```%s```", stdout)
+	} else {
+		s += fmt.Sprintf("```Aaa tidak!\n%s```", stderr)
+	}
+
 	return s
 }
 
