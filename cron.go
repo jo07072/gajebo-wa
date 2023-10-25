@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-co-op/gocron"
 	"github.com/goodsign/monday"
+	"github.com/robfig/cron"
 	"go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
 )
@@ -21,13 +21,12 @@ var classesIn30Min = map[string]string{
 	"Jum 09:00": "MATDIS RB di GK1-302",
 }
 
-
 func StartCron() {
-	loc := time.FixedZone("UTC+7", 7*60*60)
-	s := gocron.NewScheduler(loc)
-	task := func() {CheckTask()}
-	s.Cron("0,30 * * * *").Do(task)
-	s.StartAsync()
+	//loc := time.FixedZone("UTC+7", 7*60*60)
+	c := cron.New()
+	c.AddFunc("0,30 * * * *", CheckTask)
+	c.Start()
+	Info("Cron started")
 }
 
 func CheckTask() {
@@ -35,9 +34,9 @@ func CheckTask() {
 	class, ok := classesIn30Min[check]
 
 	Info("Checking schedule for %s", check)
-	Info("Found : %s", ok)
+	Info("Found : %b", ok)
 
-	if (ok) {
+	if ok {
 		text := fmt.Sprintf("Reminder : kelas %s dalam 30 menit", class)
 		client.SendMessage(context.Background(), types.NewJID("120363028653412122", types.GroupServer), &proto.Message{
 			Conversation: &text,
