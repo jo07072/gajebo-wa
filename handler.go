@@ -74,6 +74,7 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 	}
 
 	reply = strings.TrimSpace(reply)
+	reply = firstN(reply, 1000)
 
 	if reply != "" {
 		client.SendMessage(context.Background(), v.Info.Chat, &proto.Message{Conversation: &reply})
