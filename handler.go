@@ -65,6 +65,10 @@ func OnMessage(client *whatsmeow.Client, v *events.Message) {
 		reply += GetJsResponses(strings.Join(query, " "))
 	case ".kotlin":
 		reply += GetKotlinResponses(strings.Join(query, " "))
+	case ".py":
+		reply += GetPyResponses(strings.Join(query, " "))
+	case ".sh":
+		reply += GetShResponses(strings.Join(query, " "))
 	default:
 		reply = ""
 	}
@@ -101,7 +105,9 @@ Lihat berita terbaru dari CNN
 _.ip www.site.com_
 _.cpp kode..._
 _.js kode..._
-_.kotlin kode..._`
+_.kotlin kode..._
+_.py kode..._
+_.sh (◍¬‿¬)..._`
 }
 
 func GetWeather(location string) string {
